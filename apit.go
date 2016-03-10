@@ -29,6 +29,9 @@ func PerformRequest(t *testing.T, method, path string, header http.Header, reque
 	}
 
 	req, _ := http.NewRequest(method, path, bytes.NewBuffer(byteJson))
+	if req == nil {
+		t.Fatal("invalid path")
+	}
 	if header != nil {
 		req.Header = header
 	}
