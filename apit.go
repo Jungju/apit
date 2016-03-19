@@ -8,6 +8,7 @@ import(
 	"github.com/stretchr/testify/assert"
 	"github.com/gin-gonic/gin"
 	"encoding/json"
+	"fmt"
 )
 
 var(
@@ -40,8 +41,10 @@ func PerformRequest(t *testing.T, method, path string, header http.Header, reque
 	assert.Equal(t, expectedCode, w.Code)
 
 	if responseBodyStruct != nil {
-		if err := json.Unmarshal([]byte(w.Body.String()), &responseBodyStruct); err != nil {
-			t.Fatal(err)
+		body := w.Body.String()
+		if err := json.Unmarshal([]byte(body), &responseBodyStruct); err != nil {
+			fmt.Println("error body ::: ",body)
+			t.FailNow()
 		}
 	}
 
