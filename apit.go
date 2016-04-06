@@ -8,7 +8,6 @@ import(
 	"github.com/stretchr/testify/assert"
 	"github.com/gin-gonic/gin"
 	"encoding/json"
-	"fmt"
 )
 
 var(
@@ -19,7 +18,7 @@ func SetGin(gin *gin.Engine) {
 	curGin = gin
 }
 
-func PerformRequest(t *testing.T, method, path string, header http.Header, requestBody interface{}, responseBodyStruct interface{}, expectedCode int) *httptest.ResponseRecorder {
+func PerformRequest(t *testing.T, method, path string, header http.Header, requestBody interface{}, responseBodyStruct interface{}, respErr interface{}, expectedCode int) *httptest.ResponseRecorder {
 	if curGin == nil {
 		t.Fatal("Please SetGin()...")
 	}
@@ -31,7 +30,7 @@ func PerformRequest(t *testing.T, method, path string, header http.Header, reque
 
 	req, _ := http.NewRequest(method, path, bytes.NewBuffer(byteJson))
 	if req == nil {
-		t.Fatal("invalid path")
+		t.Fatalf("invalid path. path = %s", path)
 	}
 	if header != nil {
 		req.Header = header
@@ -40,11 +39,15 @@ func PerformRequest(t *testing.T, method, path string, header http.Header, reque
 	curGin.ServeHTTP(w, req)
 	assert.Equal(t, expectedCode, w.Code)
 
-	if responseBodyStruct != nil {
-		body := w.Body.String()
+	body := w.Body.String()
+	if responseBodyStruct != nil && w.Code >= 200 && w.Code <= 210 {
 		if err := json.Unmarshal([]byte(body), &responseBodyStruct); err != nil {
-			fmt.Println("error body ::: ",body)
-			t.FailNow()
+			assert.FailNow(t, "error body ::: ",body, w.Code)
+		}
+	}
+	if respErr != nil && w.Code >= 400 && w.Code <= 500{
+		if err := json.Unmarshal([]byte(body), &respErr); err != nil {
+			assert.FailNow(t, "error body ::: ",body, w.Code)
 		}
 	}
 
